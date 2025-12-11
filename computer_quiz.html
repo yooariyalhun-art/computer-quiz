@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>เกมคอมพิวเตอร์เบื้องต้น</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: #f3f6fb;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 700px;
+      width: 100%;
+      background: #ffffff;
+      margin: 24px;
+      padding: 24px 24px 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    h1, h2, h3 {
+      margin-top: 0;
+      text-align: center;
+      color: #1f3a93;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #2563eb;
+      color: #ffffff;
+      transition: background 0.2s, transform 0.05s;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #playerInfo {
+      margin-bottom: 16px;
+      padding: 10px;
+      border-radius: 8px;
+      background: #eff6ff;
+      font-size: 14px;
+      color: #1e40af;
+    }
+
+    #question-number {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    #question-text {
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+
+    #choices {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .choice-btn {
+      text-align: left;
+      background: #f9fafb;
+      border: 1px solid #d1d5db;
+      color: #111827;
+    }
+
+    .choice-btn.correct {
+      background: #bbf7d0;
+      border-color: #22c55e;
+    }
+
+    .choice-btn.incorrect {
+      background: #fecaca;
+      border-color: #ef4444;
+    }
+
+    .status {
+      min-height: 20px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .status.correct-text {
+      color: #16a34a;
+    }
+
+    .status.incorrect-text {
+      color: #dc2626;
+    }
+
+    #score-info {
+      margin-top: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .center {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>เกมคอมพิวเตอร์เบื้องต้น</h1>
+
+    <!-- หน้ากรอกข้อมูลผู้เล่น -->
+    <div id="start-screen">
+      <h2>กรอกข้อมูลก่อนเริ่มเล่น</h2>
+      <label for="firstName">ชื่อ</label>
+      <input type="text" id="firstName" placeholder="เช่น สมชาย" />
+
+      <label for="lastName">นามสกุล</label>
+      <input type="text" id="lastName" placeholder="เช่น ใจดี" />
+
+      <label for="idSuffix">รหัสประจำ 3 ตัวท้าย</label>
+      <input type="text" id="idSuffix" maxlength="3" placeholder="เช่น 123" />
+
+      <div class="center">
+        <button id="startBtn">เริ่มทำแบบทดสอบ</button>
+      </div>
+    </div>
+
+    <!-- หน้าทำแบบทดสอบ -->
+    <div id="quiz-screen" class="hidden">
+      <div id="playerInfo"></div>
+
+      <div id="question-container">
+        <div id="question-number"></div>
+        <div id="question-text"></div>
+        <div id="choices"></div>
+        <div id="feedback" class="status"></div>
+      </div>
+
+      <div class="center">
+        <button id="nextBtn" disabled>ข้อต่อไป</button>
+      </div>
+      <div id="score-info"></div>
+    </div>
+
+    <!-- หน้าสรุปผล -->
+    <div id="result-screen" class="hidden">
+      <h2>สรุปผลคะแนน</h2>
+      <p id="result-player"></p>
+      <p id="result-score"></p>
+      <p id="result-message"></p>
+      <div class="center">
+        <button id="restartBtn">เล่นใหม่อีกครั้ง</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const questionBank = [
+      {
+        question: "ข้อใดต่อไปนี้เป็น 'ฮาร์ดแวร์' ของคอมพิวเตอร์",
+        choices: [
+          "หน่วยประมวลผลกลาง (CPU)",
+          "ระบบปฏิบัติการ Windows 10",
+          "โปรแกรม Microsoft Word",
+          "เว็บไซต์ Google"
+        ],
+        correctIndex: 0
+      },
+      {
+        question: "ข้อใดคือ 'ระบบปฏิบัติการ' (Operating System)",
+        choices: [
+          "Microsoft Word",
+          "Windows 10",
+          "Google Chrome",
+          "Facebook"
+        ],
+        correctIndex: 1
+      },
+      {
+        question: "หากต้องการพิมพ์รายงานเอกสาร ควรใช้โปรแกรมใด",
+        choices: [
+          "Microsoft PowerPoint",
+          "Microsoft Excel",
+          "Microsoft Word",
+          "โปรแกรม Paint"
+        ],
+        correctIndex: 2
+      },
+      {
+        question: "หากต้องการคำนวณตัวเลขและสร้างตาราง ควรใช้โปรแกรมใด",
+        choices: [
+          "Microsoft Excel",
+          "Microsoft Word",
+          "Microsoft PowerPoint",
+          "โปรแกรมบีบอัดไฟล์"
+        ],
+        correctIndex: 0
+      },
+      {
+        question: "โปรแกรมใดเหมาะสำหรับใช้สร้างสไลด์นำเสนอ",
+        choices: [
+          "Microsoft Word",
+          "Microsoft Excel",
+          "Microsoft PowerPoint",
+          "โปรแกรม Notepad"
+        ],
+        correctIndex: 2
+      },
+      {
+        question: "หน่วยความจำใดที่ข้อมูลจะหายไปเมื่อปิดเครื่องคอมพิวเตอร์",
+        choices: [
+          "ฮาร์ดดิสก์ (Hard Disk)",
+          "แฟลชไดรฟ์ (Flash Drive)",
+          "หน่วยความจำแรม (RAM)",
+          "ดิสก์ภายนอก (External HDD)"
+        ],
+        correctIndex: 2
+      },
+      {
+        question: "ข้อใดต่อไปนี้เป็นอุปกรณ์รับข้อมูลเข้า (Input Device)",
+        choices: [
+          "เครื่องพิมพ์ (Printer)",
+          "ลำโพง (Speaker)",
+          "เมาส์ (Mouse)",
+          "จอภาพ (Monitor)"
+        ],
+        correctIndex: 2
+      },
+      {
+        question: "ข้อใด 'ไม่ใช่' อุปกรณ์เก็บข้อมูล (Storage Device)",
+        choices: [
+          "ฮาร์ดดิสก์ (Hard Disk)",
+          "เครื่องพิมพ์ (Printer)",
+          "แฟลชไดรฟ์ (Flash Drive)",
+          "การ์ดหน่วยความจำ (Memory Card)"
+        ],
+        correctIndex: 1
+      },
+      {
+        question: "การบันทึกไฟล์ 'ครั้งแรก' ในโปรแกรมสำเร็จรูปส่วนใหญ่ควรใช้คำสั่งใด",
+        choices: [
+          "New",
+          "Open",
+          "Save As...",
+          "Print"
+        ],
+        correctIndex: 2
+      },
+      {
+        question: "นามสกุลไฟล์เอกสารของ Microsoft Word รุ่นใหม่คือข้อใด",
+        choices: [
+          ".xlsx",
+          ".pptx",
+          ".docx",
+          ".txt"
+        ],
+        correctIndex: 2
+      },
+      {
+        question: "ข้อใดคือการใช้รหัสผ่านที่ปลอดภัยมากที่สุด",
+        choices: [
+          "123456",
+          "ชื่อเล่นของตนเอง",
+          "วันเกิดของตนเอง",
+          "มีทั้งตัวอักษร ตัวเลข และสัญลักษณ์ผสมกัน"
+        ],
+        correctIndex: 3
+      },
+      {
+        question: "หากต้องการส่งไฟล์เอกสารไปให้เพื่อนผ่านอินเทอร์เน็ต ควรใช้บริการใด",
+        choices: [
+          "อีเมล (E-mail)",
+          "โปรแกรม Paint",
+          "เครื่องพิมพ์",
+          "โปรแกรมบีบอัดไฟล์เพียงอย่างเดียว"
+        ],
+        correctIndex: 0
+      },
+      {
+        question: "Cloud Storage ที่นิยมใช้เก็บไฟล์งานออนไลน์คือข้อใด",
+        choices: [
+          "Google Drive",
+          "Control Panel",
+          "Task Manager",
+          "Recycle Bin"
+        ],
+        correctIndex: 0
+      },
+      {
+        question: "ถ้าเราต้องการจัดย่อหน้า จัดหัวข้อ และใส่หัวกระดาษในรายงาน จะใช้โปรแกรมใดสะดวกที่สุด",
+        choices: [
+          "Microsoft Excel",
+          "Microsoft Word",
+          "โปรแกรมแอนตี้ไวรัส",
+          "โปรแกรมจัดการไฟล์บีบอัด"
+        ],
+        correctIndex: 1
+      }
+    ];
+
+    const TOTAL_QUESTIONS_PER_GAME = 10;
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    const startScreen = document.getElementById("start-screen");
+    const quizScreen = document.getElementById("quiz-screen");
+    const resultScreen = document.getElementById("result-screen");
+
+    const firstNameInput = document.getElementById("firstName");
+    const lastNameInput = document.getElementById("lastName");
+    const idSuffixInput = document.getElementById("idSuffix");
+
+    const playerInfoDiv = document.getElementById("playerInfo");
+    const questionNumberDiv = document.getElementById("question-number");
+    const questionTextDiv = document.getElementById("question-text");
+    const choicesDiv = document.getElementById("choices");
+    const feedbackDiv = document.getElementById("feedback");
+    const scoreInfoDiv = document.getElementById("score-info");
+
+    const resultPlayerP = document.getElementById("result-player");
+    const resultScoreP = document.getElementById("result-score");
+    const resultMessageP = document.getElementById("result-message");
+
+    const startBtn = document.getElementById("startBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const restartBtn = document.getElementById("restartBtn");
+
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let currentAnswers = [];
+    let hasAnswered = false;
+    let playerData = {
+      firstName: "",
+      lastName: "",
+      idSuffix: ""
+    };
+
+    function startGame() {
+      const firstName = firstNameInput.value.trim();
+      const lastName = lastNameInput.value.trim();
+      const idSuffix = idSuffixInput.value.trim();
+
+      if (!firstName || !lastName || !idSuffix) {
+        alert("กรุณากรอกชื่อ นามสกุล และรหัสประจำ 3 ตัวท้ายให้ครบถ้วน");
+        return;
+      }
+      if (!/^\d{3}$/.test(idSuffix)) {
+        alert("รหัสประจำ 3 ตัวท้าย ต้องเป็นตัวเลข 3 หลักเท่านั้น");
+        return;
+      }
+
+      playerData = { firstName, lastName, idSuffix };
+
+      const shuffledBank = shuffleArray([...questionBank]);
+      currentQuestions = shuffledBank.slice(0, TOTAL_QUESTIONS_PER_GAME);
+
+      currentIndex = 0;
+      score = 0;
+
+      startScreen.classList.add("hidden");
+      resultScreen.classList.add("hidden");
+      quizScreen.classList.remove("hidden");
+
+      playerInfoDiv.textContent =
+        `ผู้เล่น: ${playerData.firstName} ${playerData.lastName} | ` +
+        `รหัส 3 ตัวท้าย: ${playerData.idSuffix}`;
+
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const qData = currentQuestions[currentIndex];
+      questionNumberDiv.textContent =
+        `คำถามข้อที่ ${currentIndex + 1} / ${TOTAL_QUESTIONS_PER_GAME}`;
+      questionTextDiv.textContent = qData.question;
+
+      currentAnswers = qData.choices.map((text, idx) => ({
+        text,
+        isCorrect: idx === qData.correctIndex
+      }));
+      shuffleArray(currentAnswers);
+
+      choicesDiv.innerHTML = "";
+      currentAnswers.forEach((ans, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "choice-btn";
+        btn.textContent = ans.text;
+        btn.dataset.index = idx;
+        btn.addEventListener("click", handleChoiceClick);
+        choicesDiv.appendChild(btn);
+      });
+
+      feedbackDiv.textContent = "";
+      feedbackDiv.className = "status";
+      hasAnswered = false;
+      nextBtn.disabled = true;
+      scoreInfoDiv.textContent = `คะแนนปัจจุบัน: ${score} คะแนน`;
+    }
+
+    function handleChoiceClick(event) {
+      if (hasAnswered) return;
+      hasAnswered = true;
+
+      const clickedIndex = parseInt(event.currentTarget.dataset.index, 10);
+      const isCorrect = currentAnswers[clickedIndex].isCorrect;
+
+      const allButtons = choicesDiv.querySelectorAll("button");
+      allButtons.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (currentAnswers[idx].isCorrect) {
+          btn.classList.add("correct");
+        }
+      });
+
+      if (isCorrect) {
+        score++;
+        event.currentTarget.classList.add("correct");
+        feedbackDiv.textContent = "ถูกต้อง! เก่งมาก 🎉";
+        feedbackDiv.classList.add("correct-text");
+      } else {
+        event.currentTarget.classList.add("incorrect");
+        feedbackDiv.textContent = "ตอบไม่ถูก ลองข้อถัดไปดูนะ";
+        feedbackDiv.classList.add("incorrect-text");
+      }
+
+      scoreInfoDiv.textContent = `คะแนนปัจจุบัน: ${score} คะแนน`;
+      nextBtn.disabled = false;
+    }
+
+    function goToNextQuestion() {
+      if (currentIndex < TOTAL_QUESTIONS_PER_GAME - 1) {
+        currentIndex++;
+        loadQuestion();
+      } else {
+        endGame();
+      }
+    }
+
+    function endGame() {
+      quizScreen.classList.add("hidden");
+      resultScreen.classList.remove("hidden");
+
+      resultPlayerP.textContent =
+        `ผู้เล่น: ${playerData.firstName} ${playerData.lastName} (รหัส 3 ตัวท้าย: ${playerData.idSuffix})`;
+      resultScoreP.textContent =
+        `คุณได้ ${score} จาก ${TOTAL_QUESTIONS_PER_GAME} คะแนน`;
+
+      let msg = "";
+      const ratio = score / TOTAL_QUESTIONS_PER_GAME;
+      if (ratio === 1) {
+        msg = "สุดยอด! ความรู้พื้นฐานคอมพิวเตอร์แน่นมาก 👍";
+      } else if (ratio >= 0.7) {
+        msg = "ทำได้ดี! ลองทบทวนอีกนิดจะยิ่งเก่งขึ้น";
+      } else if (ratio >= 0.4) {
+        msg = "พอใช้ได้ ลองกลับไปอ่านเนื้อหาเกี่ยวกับคอมพิวเตอร์เบื้องต้นเพิ่มเติมนะ";
+      } else {
+        msg = "ยังไม่ผ่าน ลองเล่นใหม่อีกครั้งเพื่อฝึกฝนความรู้ดูนะ";
+      }
+      resultMessageP.textContent = msg;
+    }
+
+    function restartGame() {
+      quizScreen.classList.add("hidden");
+      resultScreen.classList.add("hidden");
+      startScreen.classList.remove("hidden");
+
+      firstNameInput.value = "";
+      lastNameInput.value = "";
+      idSuffixInput.value = "";
+    }
+
+    startBtn.addEventListener("click", startGame);
+    nextBtn.addEventListener("click", goToNextQuestion);
+    restartBtn.addEventListener("click", restartGame);
+  </script>
+</body>
+</html>
